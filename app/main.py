@@ -49,6 +49,12 @@ new_grad_nursing_jobs = NursingJobs(
 )
 
 
+@tasks.loop(minutes=30)
+async def schedule_ping():
+    await bot.wait_until_ready()
+    log.info("Ping bot is awake")
+
+
 @tasks.loop(hours=CONFIG.hours_old)
 async def schedule_nursing_job_scrape():
     await bot.wait_until_ready()
@@ -120,6 +126,9 @@ async def on_ready():
     if not schedule_nursing_job_scrape.is_running():
         log.info("Scheduling nursing job scrape")
         schedule_nursing_job_scrape.start()
+    if not schedule_ping.is_running():
+        log.info("Scheduling ping")
+        schedule_ping.start()
 
 
 @bot.event
@@ -127,6 +136,7 @@ async def on_disconnect():
     # Cancel loops on disconnect for clean shutdown
     schedule_new_grad_nursing_job_scrape.cancel()
     schedule_nursing_job_scrape.cancel()
+    schedule_ping.cancel()
     log.info("AstaBot disconnected")
 
 
