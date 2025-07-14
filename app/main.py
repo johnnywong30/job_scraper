@@ -101,6 +101,7 @@ async def schedule_new_grad_nursing_job_scrape():
         header = f"{format_time_now()}\n **{num_jobs} NEW New Grad Nursing Jobs**"
         content = paginator.get_page_content()
         footer = f"Page 1/{paginator.total_pages}"
+        csv_file = format_jobs_as_discord_file(jobs)
         await channel.send(
             content=f"{header}\n\n{content}\n\n{footer}", view=paginator, file=csv_file
         )
