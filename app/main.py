@@ -93,7 +93,7 @@ async def schedule_new_grad_nursing_job_scrape():
 
         if num_jobs == 0:
             await channel.send(
-                f"{format_time_now()} -- I didn't find any jobs - sorry 😔"
+                f"{format_time_now()} -- I didn't find any new grad jobs - sorry 😔"
             )
             return
 
