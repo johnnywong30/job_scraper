@@ -61,6 +61,8 @@ class Scrape:
         )
 
     def clean_results(self, scrape_results: DataFrame):
+        if scrape_results.empty:
+            return scrape_results
         selected_columns = [
             "id",
             "site",

@@ -1,13 +1,12 @@
 import discord
-from discord.ext import commands
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from discord.ext import commands, tasks
 
-import io
 import logging
-import csv
 
 from config import CONFIG
 from scraper.nursing import NursingJobs
+from helpers.paginator import Paginator
+from helpers.formatters import format_time_now
 
 
 import time
@@ -41,7 +40,6 @@ log.addHandler(handler)
 
 intents = discord.Intents.default()
 bot = commands.Bot(command_prefix="!", intents=intents)
-scheduler = AsyncIOScheduler()
 
 
 nursing_jobs = NursingJobs()
@@ -51,43 +49,71 @@ new_grad_nursing_jobs = NursingJobs(
 )
 
 
-@bot.event
-async def on_ready():
-    log.info(f"Logged in as {bot.user}")
-
-    await schedule_nursing_job_scrape()
-
-
+@tasks.loop(hours=CONFIG.hours_old)
 async def schedule_nursing_job_scrape():
     channel = bot.get_channel(CONFIG.nursing_channel)
     if channel:
         log.info("Scheduled nursing job scrape")
+
         jobs = nursing_jobs.scrape_jobs()
         jobs = nursing_jobs.clean_results(jobs)
         num_jobs = len(jobs)
         log.info(f"Found {num_jobs} nursing jobs")
 
         if num_jobs == 0:
-            await channel.send("I didn't find any jobs - sorry 😔")
+            await channel.send(
+                f"{format_time_now()} -- I didn't find any jobs - sorry 😔"
+            )
             return
 
-        # turn pandas df into csv
-        csv_buffer = io.StringIO()
-        jobs.to_csv(
-            csv_buffer,
-            quoting=csv.QUOTE_NONNUMERIC,
-            escapechar="\\",
-            index=False,
-        )
-        csv_bytes = io.BytesIO(csv_buffer.getvalue().encode("utf-8"))
-        csv_bytes.seek(0)
-        file = discord.File(fp=csv_bytes, filename="nursing_jobs.csv")
-        await channel.send(
-            f"I found some jobs! Here are {num_jobs} jobs in this csv:", file=file
-        )
-
+        paginator = Paginator(jobs, page_size=3)
+        header = f"{format_time_now()}\n **{num_jobs} NEW Nursing Jobs**"
+        content = paginator.get_page_content()
+        footer = f"Page 1/{paginator.total_pages}"
+        await channel.send(content=f"{header}\n\n{content}\n\n{footer}", view=paginator)
     else:
         log.warning("Nursing channel not found - sorry 😔")
+
+
+@tasks.loop(hours=CONFIG.hours_old)
+async def schedule_new_grad_nursing_job_scrape():
+    channel = bot.get_channel(CONFIG.nursing_channel)
+    if channel:
+        log.info("Scheduled new grad nursing job scrape")
+
+        jobs = new_grad_nursing_jobs.scrape_jobs()
+        jobs = new_grad_nursing_jobs.clean_results(jobs)
+        num_jobs = len(jobs)
+        log.info(f"Found {num_jobs} new grad nursing jobs")
+
+        if num_jobs == 0:
+            await channel.send(
+                f"{format_time_now()} -- I didn't find any jobs - sorry 😔"
+            )
+            return
+
+        paginator = Paginator(jobs, page_size=3)
+        header = f"{format_time_now()}\n **{num_jobs} NEW New Grad Nursing Jobs**"
+        content = paginator.get_page_content()
+        footer = f"Page 1/{paginator.total_pages}"
+        await channel.send(content=f"{header}\n\n{content}\n\n{footer}", view=paginator)
+    else:
+        log.warning("Nursing channel not found - sorry 😔")
+
+
+@bot.event
+async def on_ready():
+    log.info(f"Logged in as {bot.user}")
+    schedule_new_grad_nursing_job_scrape.start()
+    schedule_nursing_job_scrape.start()
+
+
+@bot.event
+async def on_disconnect():
+    # Cancel loops on disconnect for clean shutdown
+    schedule_new_grad_nursing_job_scrape.cancel()
+    schedule_nursing_job_scrape.cancel()
+    log.info("AstaBot disconnected")
 
 
 def main():
