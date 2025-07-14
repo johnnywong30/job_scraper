@@ -6,7 +6,7 @@ import logging
 from config import CONFIG
 from scraper.nursing import NursingJobs
 from helpers.paginator import Paginator
-from helpers.formatters import format_time_now
+from helpers.formatters import format_time_now, format_jobs_as_discord_file
 
 
 import time
@@ -70,7 +70,12 @@ async def schedule_nursing_job_scrape():
         header = f"{format_time_now()}\n **{num_jobs} NEW Nursing Jobs**"
         content = paginator.get_page_content()
         footer = f"Page 1/{paginator.total_pages}"
-        await channel.send(content=f"{header}\n\n{content}\n\n{footer}", view=paginator)
+
+        csv_file = format_jobs_as_discord_file(jobs)
+
+        await channel.send(
+            content=f"{header}\n\n{content}\n\n{footer}", view=paginator, file=csv_file
+        )
     else:
         log.warning("Nursing channel not found - sorry 😔")
 
@@ -96,7 +101,9 @@ async def schedule_new_grad_nursing_job_scrape():
         header = f"{format_time_now()}\n **{num_jobs} NEW New Grad Nursing Jobs**"
         content = paginator.get_page_content()
         footer = f"Page 1/{paginator.total_pages}"
-        await channel.send(content=f"{header}\n\n{content}\n\n{footer}", view=paginator)
+        await channel.send(
+            content=f"{header}\n\n{content}\n\n{footer}", view=paginator, file=csv_file
+        )
     else:
         log.warning("Nursing channel not found - sorry 😔")
 

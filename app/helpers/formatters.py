@@ -1,6 +1,9 @@
 from pandas import DataFrame
+import discord
 
 from datetime import datetime
+import io
+import csv
 
 
 def format_jobs_as_discord_msg(jobs: DataFrame):
@@ -18,3 +21,13 @@ def format_jobs_as_discord_msg(jobs: DataFrame):
 
 def format_time_now():
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
+def format_jobs_as_discord_file(jobs: DataFrame):
+    csv_buffer = io.StringIO()
+    jobs.to_csv(csv_buffer, quoting=csv.QUOTE_NONNUMERIC, escapechar="\\", index=False)
+    csv_bytes = io.BytesIO(csv_buffer.getvalue().encode("utf-8"))
+    csv_bytes.seek(0)
+
+    file = discord.File(fp=csv_bytes, filename="jobs.csv")
+    return file
