@@ -51,6 +51,7 @@ new_grad_nursing_jobs = NursingJobs(
 
 @tasks.loop(hours=CONFIG.hours_old)
 async def schedule_nursing_job_scrape():
+    await bot.wait_until_ready()
     channel = bot.get_channel(CONFIG.nursing_channel)
     if channel:
         log.info("Scheduled nursing job scrape")
@@ -82,6 +83,7 @@ async def schedule_nursing_job_scrape():
 
 @tasks.loop(hours=CONFIG.hours_old)
 async def schedule_new_grad_nursing_job_scrape():
+    await bot.wait_until_ready()
     channel = bot.get_channel(CONFIG.nursing_channel)
     if channel:
         log.info("Scheduled new grad nursing job scrape")
@@ -112,8 +114,12 @@ async def schedule_new_grad_nursing_job_scrape():
 @bot.event
 async def on_ready():
     log.info(f"Logged in as {bot.user}")
-    schedule_new_grad_nursing_job_scrape.start()
-    schedule_nursing_job_scrape.start()
+    if not schedule_new_grad_nursing_job_scrape.is_running():
+        log.info("Scheduling new grad nursing job scrape")
+        schedule_new_grad_nursing_job_scrape.start()
+    if not schedule_nursing_job_scrape.is_running():
+        log.info("Scheduling nursing job scrape")
+        schedule_nursing_job_scrape.start()
 
 
 @bot.event
