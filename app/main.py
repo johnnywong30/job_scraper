@@ -133,10 +133,6 @@ async def on_ready():
 
 @bot.event
 async def on_disconnect():
-    # Cancel loops on disconnect for clean shutdown
-    schedule_new_grad_nursing_job_scrape.cancel()
-    schedule_nursing_job_scrape.cancel()
-    schedule_ping.cancel()
     log.info("AstaBot disconnected")
 
 
