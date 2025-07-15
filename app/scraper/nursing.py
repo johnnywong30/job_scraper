@@ -1,6 +1,6 @@
 from pandas import DataFrame
 
-from .scrape import Scrape
+from app.scraper.scrape import Scrape
 
 
 class NursingJobs(Scrape):
@@ -14,8 +14,13 @@ class NursingJobs(Scrape):
         self.search_term = search_term
         self.google_search_term = google_search_term
 
-    def scrape_jobs(self):
-        return super().scrape_jobs(self.search_term, self.google_search_term)
+    def scrape_jobs(
+        self, search_term: str | None = None, google_search_term: str | None = None
+    ):
+        return super().scrape_jobs(
+            self.search_term if not search_term else search_term,
+            self.google_search_term if not google_search_term else google_search_term,
+        )
 
     def save_as_csv(
         self,

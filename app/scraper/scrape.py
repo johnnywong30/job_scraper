@@ -4,7 +4,7 @@ from pandas import DataFrame
 import csv
 from typing import List
 
-from config import CONFIG
+from app.config import CONFIG
 
 
 class Scrape:

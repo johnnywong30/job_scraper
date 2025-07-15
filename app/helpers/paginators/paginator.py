@@ -1,7 +1,7 @@
 import discord
 from pandas import DataFrame
 
-from .formatters import format_jobs_as_discord_msg
+from app.helpers.formatters import format_jobs_as_discord_msg
 
 
 class Paginator(discord.ui.View):
