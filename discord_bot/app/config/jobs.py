@@ -4,16 +4,20 @@ from pydantic import Field
 from jobspy import Site
 
 from typing import List
+import os
 
 load_dotenv()
+
+IS_DOCKER = os.getenv("IS_DOCKER", False)
+PROXY_PREFIX = "http://host.docker.internal" if IS_DOCKER else "http://localhost"
 
 
 class JobScrapeSettings(BaseSettings):
     proxies: List[str] = Field(
         default=[
-            "http://localhost:3128",
-            "http://localhost:8080",
-            "http://localhost:8888",
+            f"{PROXY_PREFIX}:3128",
+            f"{PROXY_PREFIX}:8080",
+            f"{PROXY_PREFIX}:8888",
         ],
     )
     job_boards: List[str] = Field(

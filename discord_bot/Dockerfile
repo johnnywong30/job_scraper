@@ -6,7 +6,7 @@ RUN pip install uv
 
 COPY requirements.txt .
 
-RUN uv add -r requirements.txt
+RUN pip install -r requirements.txt
 
 COPY ./app ./app
 

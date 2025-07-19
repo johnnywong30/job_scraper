@@ -2,10 +2,14 @@ services:
   discord-bot:
     build:
       context: ./discord_bot
-      dockerfile: Dockerfile
     container_name: discord-bot
     restart: unless-stopped
     env_file:
       - ./discord_bot/app/.env
+    environment:
+      - IS_DOCKER=True
     volumes:
       - ./discord_bot/app:/app
+    network_mode: "host"
+    
+    
