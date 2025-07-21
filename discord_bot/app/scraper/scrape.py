@@ -67,12 +67,12 @@ class Scrape:
             "id",
             "site",
             "job_url",
-            "job_url_direct",
             "title",
             "company",
             "location",
-            "date_posted",
             "company_url",
+            "date_posted",
+            "job_url_direct",
             "company_url_direct",
         ]
         clean_df = scrape_results[selected_columns]
