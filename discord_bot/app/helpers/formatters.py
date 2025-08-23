@@ -1,9 +1,17 @@
-from pandas import DataFrame
+from pandas import DataFrame, Series
 import discord
 
 from datetime import datetime
 import io
 import csv
+
+
+def format_job_as_discord_msg(row: Series):
+    return (
+        f"**{row['title']}**\n\n"
+        f"🏢 {row['company']}   📍 {row['location']}\n"
+        f"🔗 <{row['job_url']}>\n\n"
+    )
 
 
 def format_jobs_as_discord_msg(jobs: DataFrame):

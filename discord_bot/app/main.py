@@ -6,7 +6,7 @@ import logging
 from app.config import CONFIG
 from app.config.log_config import handler
 from app.tasks.nursing import scrape_nursing_jobs
-from app.helpers.paginators.nursing import NursingPaginator
+from app.helpers.nursing import NursingHelper
 
 # Setup logger with handler
 log = logging.getLogger("AstaBot")
@@ -37,16 +37,18 @@ async def schedule_nursing_job_scrape():
 
     log.info("Queued up nursing job scrape.")
     nursing_job_search = scrape_nursing_jobs()
+
     # registered nurse jobs
     if not nursing_job_search["num_rn_jobs"]:
         await channel.send(f"I didn't find any Registered Nurse jobs - sorry 😔")
     else:
-        rn_paginator = NursingPaginator(nursing_job_search["rn_jobs"], page_size=3)
-        await channel.send(
-            content=rn_paginator.build_paginator_msg(),
-            view=rn_paginator,
-            file=rn_paginator.build_nursing_csv_file(),
+        rn_jobs = nursing_job_search["rn_jobs"]
+        rn_job_thread_builder = NursingHelper(rn_jobs)
+        rn_job_notification = rn_job_thread_builder.job_search_notification()
+        rn_job_thread = await rn_job_thread_builder.create_job_search_thread(
+            channel, rn_job_notification
         )
+        await rn_job_thread_builder.generate_job_search_notification(rn_job_thread)
 
     # new grad registered nurse jobs
     if not nursing_job_search["num_new_grad_jobs"]:
@@ -54,16 +56,13 @@ async def schedule_nursing_job_scrape():
             f"I didn't find any New Grad Registered Nurse jobs - sorry 😔"
         )
     else:
-        new_grad_paginator = NursingPaginator(
-            nursing_job_search["new_grad_jobs"],
-            page_size=3,
-            is_new_grad=True,
+        new_grad_jobs = nursing_job_search["new_grad_jobs"]
+        new_grad_thread_builder = NursingHelper(new_grad_jobs, is_new_grad=True)
+        new_grad_notification = new_grad_thread_builder.job_search_notification()
+        new_grad_thread = await new_grad_thread_builder.create_job_search_thread(
+            channel, new_grad_notification
         )
-        await channel.send(
-            content=new_grad_paginator.build_paginator_msg(),
-            view=new_grad_paginator,
-            file=new_grad_paginator.build_nursing_csv_file(),
-        )
+        await new_grad_thread_builder.generate_job_search_notification(new_grad_thread)
 
 
 @bot.event
